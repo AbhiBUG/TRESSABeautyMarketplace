@@ -1023,7 +1023,9 @@ function Profile({ go, stylistId }: { go: (p: Page) => void; stylistId: number }
   )
 }
 
-function Booking({ go }: { go: (p: Page) => void }) {
+function Booking({ go, stylistId }: { go: (p: Page) => void; stylistId: number }) {
+  const stylist = stylists.find((artist) => artist.id === stylistId) ?? stylists[0]
+  const selectedService = stylist.menu[0]
   const [date, setDate] = useState(14)
   const [time, setTime] = useState("10:30")
   const [confirmed, setConfirmed] = useState(false)
@@ -1067,15 +1069,15 @@ function Booking({ go }: { go: (p: Page) => void }) {
           <em>in the diary.</em>
         </h1>
         <p>
-          Meera will see you Thursday, 14 March at {time}. We’ve sent the details
-          to your inbox.
+          {stylist.name.split(" ")[0]} will see you Thursday, 14 March at {time}.
+          We’ve sent the details to your inbox.
         </p>
         <div className="confirmation">
-          <img src={photos.stylist1} alt="Meera Sharma" />
+          <img src={stylist.image} alt={stylist.name} />
           <div>
             <small>Appointment with</small>
-            <b>Meera Sharma</b>
-            <span>Signature cut & finish · ₹2,600</span>
+            <b>{stylist.name}</b>
+            <span>{selectedService[0]} · {selectedService[2]}</span>
           </div>
         </div>
         <button className="pill primary" onClick={() => go("home")}>
@@ -1087,7 +1089,7 @@ function Booking({ go }: { go: (p: Page) => void }) {
     <main className="booking-page">
       <div className="booking-form">
         <button className="back-link" onClick={() => go("profile")}>
-          ← Meera’s profile
+          ← {stylist.name.split(" ")[0]}’s profile
         </button>
         <p className="eyebrow">Book your appointment</p>
         <h1>
@@ -1138,17 +1140,17 @@ function Booking({ go }: { go: (p: Page) => void }) {
       <aside className="booking-summary">
         <p className="eyebrow">Your booking</p>
         <div className="summary-person">
-          <img src={photos.stylist1} alt="" />
+          <img src={stylist.image} alt="" />
           <div>
-            <b>Meera Sharma</b>
-            <span>Bandra, Mumbai</span>
+            <b>{stylist.name}</b>
+            <span>{stylist.location}</span>
           </div>
         </div>
         <div className="summary-line">
           <span>
-            Signature cut & finish<small>75 minutes</small>
+            {selectedService[0]}<small>{selectedService[1]}</small>
           </span>
-          <b>₹2,600</b>
+          <b>{selectedService[2]}</b>
         </div>
         <div className="summary-line">
           <span>
@@ -1157,7 +1159,7 @@ function Booking({ go }: { go: (p: Page) => void }) {
         </div>
         <div className="total">
           <span>Total</span>
-          <b>₹2,600</b>
+          <b>{selectedService[2]}</b>
         </div>
         <button
           className="pill primary full"
@@ -1183,6 +1185,7 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
   const [requestStudio, setRequestStudio] = useState("")
   const [requestSubmitted, setRequestSubmitted] = useState(false)
   const [paymentComplete, setPaymentComplete] = useState(false)
+  const [applicationPendingPayment, setApplicationPendingPayment] = useState(false)
   const calls = [
     { title: "The New Romantic", studio: "Aaina Studio", place: "Bandra, Mumbai", service: "Hair styling", offer: "Discounted", price: "₹1,500 → ₹750", deadline: "24 Mar", availability: "2 spots left", image: photos.hero[1], profile: photos.stylist1, deliverables: "Before-and-after photos + social feature", duration: "90 minutes" },
     { title: "Texture in Motion", studio: "Keshya Studio", place: "Indiranagar, Bengaluru", service: "Makeover", offer: "Complimentary", price: "Complimentary", deadline: "30 Mar", availability: "4 spots left", image: photos.hero[0], profile: photos.stylist2, deliverables: "Short transformation video + portfolio feature", duration: "2 hours" },
@@ -1195,11 +1198,16 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
     (offerType === "All offers" || call.offer === offerType),
   )
   const active = selected === null ? null : calls[selected]
+  const applicationComplete = selected !== null && applied.includes(selected)
   const apply = (index: number) => {
     setSelected(index)
     setSubmitted(false)
     setRequestSent(false)
     setRequestMode(false)
+    setApplicationPendingPayment(true)
+    window.setTimeout(() => {
+      document.getElementById("collab-payment")?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }, 0)
   }
   return (
     <main className="collab-page">
@@ -1256,7 +1264,7 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
                 <small className="offer-detail">{c.deliverables}</small>
                 <div className="offer-meta"><strong>{c.price}</strong><span>Apply by {c.deadline}</span></div>
                 <span className="availability">{c.availability}</span>
-                <div className="offer-actions"><button className="pill outline" onClick={() => setSelected(index)}>View details</button><button className="pill primary" onClick={() => apply(index)}>Apply <Icon name="arrow" size={15} /></button></div>
+                <div className="offer-actions"><button className="pill outline" onClick={() => setSelected(index)}>View details</button><button className="pill primary" onClick={() => apply(index)} disabled={applied.includes(index)}>{applied.includes(index) ? "Applied" : "Apply"} {!applied.includes(index) && <Icon name="arrow" size={15} />}</button></div>
               </div>
             </article>
           })}
@@ -1274,12 +1282,23 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
             <h4>What you receive</h4><p>{active.deliverables}. Content is created and shared only with your consent.</p>
             <h4>Application notes</h4><p>No modelling experience is needed. Applicants should be comfortable participating in the agreed service and content session.</p>
             <div className="detail-actions">
-              <button className="pill primary" onClick={() => { setSubmitted(false); setRequestSent(false); setRequestMode(false) }}>Apply for this collaboration <Icon name="arrow" size={16} /></button>
+              <button className="pill primary" onClick={() => apply(selected!)} disabled={applicationComplete}>{applicationComplete ? "Applied" : "Apply for this collaboration"} {!applicationComplete && <Icon name="arrow" size={16} />}</button>
             </div>
           </div>
         </div>
-        <form className="application-form" onSubmit={(event) => { event.preventDefault(); setApplied([...new Set([...applied, selected!])]); setSubmitted(true); setRequestSent(requestMode) }}>
+        <form className="application-form" onSubmit={(event) => {
+          event.preventDefault()
+          if (!paymentComplete) {
+            setApplicationPendingPayment(true)
+            document.getElementById("collab-payment")?.scrollIntoView({ behavior: "smooth", block: "center" })
+            return
+          }
+          setApplied([...new Set([...applied, selected!])])
+          setSubmitted(true)
+          setRequestSent(requestMode)
+        }}>
           <p className="eyebrow">{requestMode ? "Request the collaboration" : "Application"}</p><h3>{requestMode ? "Start a conversation with the business." : "Tell the artist a little about you."}</h3>
+          {applicationPendingPayment && !paymentComplete && <p className="application-payment-prompt">Complete the resource fee below before submitting this application.</p>}
           <div className="form-grid"><input required placeholder="Your name" /><input required type="email" placeholder="Email address" /><input placeholder="Phone number" /><input type="url" placeholder="Portfolio or social link (optional)" /></div>
           <input type="text" placeholder="Preferred appointment availability" /><textarea required placeholder="Why are you interested in this collaboration?" rows={4} /><label className="consent"><input required type="checkbox" /> I agree to the collaboration terms and content consent expectations.</label>
           <button className="pill primary" type="submit">{submitted ? (requestMode ? "Request sent to business" : "Application submitted") : (requestMode ? "Send request" : "Submit Application")} {!submitted && <Icon name="arrow" size={16} />}</button>
@@ -1311,23 +1330,31 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
     <small className="completed-history-note">Payment available below</small>
         </article>
       </section>
-<section className="collab-payment page-main">
+<section id="collab-payment" className="collab-payment page-main">
   <div className="payment-section-copy">
     <p className="eyebrow">Collaboration resources</p>
-    <h2>Everything your next look needs.</h2>
+    <h2>{applicationPendingPayment && !paymentComplete ? "Complete your resource fee to apply." : "Everything your next look needs."}</h2>
     <p>
-      Your completed collaboration is recorded here, with a clear resource
-      fee settled after the experience.
+      {applicationPendingPayment && !paymentComplete
+        ? "Your application is ready. Click the payment button to unlock the final submission."
+        : "Your completed collaboration is recorded here, with a clear resource fee settled after the experience."}
     </p>
   </div>
   <div className="payment-card">
     <div className="payment-card-heading">
-      <div><span className="completed-badge">Ready to pay</span><h3>Texture in Motion</h3><small>Keshya Studio · Completed collaboration</small></div>
+      <div><span className="completed-badge">{applicationPendingPayment && !paymentComplete ? "Application fee" : "Ready to pay"}</span><h3>{applicationPendingPayment && !paymentComplete && active ? active.title : "Texture in Motion"}</h3><small>{applicationPendingPayment && !paymentComplete && active ? `${active.studio} · Collaboration application` : "Keshya Studio · Completed collaboration"}</small></div>
       <strong>5%</strong>
     </div>
     <div className="payment-summary-row"><span>Payment status</span><b>{paymentComplete ? "Complete" : "Due after completion"}</b></div>
-    <button className="pill primary" onClick={() => setPaymentComplete(true)} disabled={paymentComplete}>
-      {paymentComplete ? "Payment complete" : "Pay TRESSA"} {!paymentComplete && <Icon name="arrow" size={15} />}
+    <button className="pill primary" onClick={() => {
+      setPaymentComplete(true)
+      setApplicationPendingPayment(false)
+      if (selected !== null) {
+        setApplied([...new Set([...applied, selected])])
+        setSubmitted(true)
+      }
+    }} disabled={paymentComplete}>
+      {paymentComplete ? "Payment complete" : applicationPendingPayment ? "Pay resource fee to apply" : "Pay TRESSA"} {!paymentComplete && <Icon name="arrow" size={15} />}
     </button>
     <small className="payment-note">{paymentComplete ? "Thank you for using TRESSA to bring your collaboration to life." : "The final resource fee is shown before payment confirmation."}</small>
   </div>
@@ -2148,7 +2175,7 @@ export default function App() {
         {page === "explore" && <Explore go={go} initial={search} selectStylist={setSelectedStylistId} />}
         {page === "consultation" && <Consultation go={go} trend={trend} />}
         {page === "profile" && <Profile go={go} stylistId={selectedStylistId} />}
-        {page === "booking" && <Booking go={go} />}
+        {page === "booking" && <Booking go={go} stylistId={selectedStylistId} />}
         {page === "collaborations" && <Collaborations go={go} />}
         {page === "stylists" && <ForStylists go={go} />}
         {page === "login" && <Login go={go} />}
