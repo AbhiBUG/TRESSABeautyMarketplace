@@ -1,0 +1,10 @@
+{
+  "description": "A beauty marketplace helping customers discover stylists, explore hairstyles, get personalized matches, book appointments, and find beauty collaborations.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
