@@ -443,7 +443,7 @@ function Home({
 }: {
   go: (p: Page) => void
   chooseTrend: (t: string) => void
-  setSearch: (v: { service: string location: string }) => void
+  setSearch: (v: { service: string; location: string }) => void
   selectStylist: (id: number) => void
 }) {
   const [hero, setHero] = useState(0)
@@ -696,7 +696,7 @@ function Explore({
   selectStylist,
 }: {
   go: (p: Page) => void
-  initial: { service: string location: string }
+  initial: { service: string ;location: string }
   selectStylist: (id: number) => void
 }) {
   const [service, setService] = useState(initial.service)
@@ -804,7 +804,7 @@ function Explore({
   )
 }
 
-function Consultation({ go, trend }: { go: (p: Page) => void trend: string }) {
+function Consultation({ go, trend }: { go: (p: Page) => void; trend: string }) {
   const [step, setStep] = useState(1)
   const [look, setLook] = useState(trend)
   const [hair, setHair] = useState("")
