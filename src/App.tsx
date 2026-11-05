@@ -639,13 +639,33 @@ function Home({
         </section>
 
         <section className="artist-cta section">
-          <div>
+          <div className="artist-cta-heading">
             <p className="eyebrow">For the artists</p>
-            <h2>Love creating beautiful looks?</h2>
+            <h2>Become a TRESSA Artist</h2>
+            <p>Business infrastructure for your next stage.</p>
           </div>
-          <p>Showcase your craft. Grow your chair.</p>
+          <div className="artist-plans-grid">
+            <article className="artist-plan-card">
+              <p className="pricing-plan-name">STARTER</p>
+              <strong>Presence</strong>
+              <b>Free · 2 months</b>
+              <span>Portfolio · Services · Bookings</span>
+            </article>
+            <article className="artist-plan-card featured">
+              <p className="pricing-plan-name">PRO</p>
+              <strong>Growth</strong>
+              <b>₹2,000 / month</b>
+              <span>Throughput · Signals · Promotion</span>
+            </article>
+            <article className="artist-plan-card premium">
+              <p className="pricing-plan-name">PRO-PLUS</p>
+              <strong>Intelligence</strong>
+              <b>₹10,000 / month</b>
+              <span>Collaborations · Referrals · Analytics</span>
+            </article>
+          </div>
           <button className="pill primary" onClick={() => go("login")}>
-            Become a TRESSA Artist <Icon name="arrow" size={17} />
+            Get started <Icon name="arrow" size={17} />
           </button>
         </section>
 
@@ -2116,7 +2136,7 @@ function Footer({ go }: { go: (p: Page) => void }) {
         </section>
         <section>
           <b>For talent</b>
-          <button onClick={() => go("stylists")}>Join as a stylist</button>
+          <button onClick={() => go("login")}>Join as a stylist</button>
           <button onClick={() => go("stylists")}>Pricing</button>
           <button onClick={() => go("stylists")}>Community</button>
         </section>
