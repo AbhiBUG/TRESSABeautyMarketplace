@@ -447,6 +447,8 @@ function Home({
   selectStylist: (id: number) => void
 }) {
   const [hero, setHero] = useState(0)
+  const heroTitle = "Your next look starts here"
+  const [typedHeroTitle, setTypedHeroTitle] = useState("")
   const collabRef = useRef<HTMLDivElement>(null)
   const [revealed, setRevealed] = useState(false)
   useEffect(() => {
@@ -463,6 +465,21 @@ function Home({
       observer.disconnect()
     }
   }, [])
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setTypedHeroTitle(heroTitle)
+      return
+    }
+
+    let characterIndex = 0
+    const timer = window.setInterval(() => {
+      characterIndex += 1
+      setTypedHeroTitle(heroTitle.slice(0, characterIndex))
+      if (characterIndex === heroTitle.length) window.clearInterval(timer)
+    }, 75)
+
+    return () => window.clearInterval(timer)
+  }, [])
   const search = (service: string, location: string) => {
     setSearch({ service, location })
     go("explore")
@@ -474,22 +491,12 @@ function Home({
           <div className="hero-copy">
             <p className="eyebrow fade-one">Beauty, booked better.</p>
             <h1
-              className="animated-title hero-title"
-              aria-label="Your next look starts here"
+              className="animated-title typing-title hero-title"
+              aria-label={heroTitle}
+              aria-live="polite"
             >
-              {"Your next look starts here".split(" ").map((word, i) => (
-                <span
-                  key={word}
-                  className={word === "here" ? "gradient-word" : ""}
-                  style={
-                    {
-                      "--word-delay": `${0.12 + i * 0.1}s`,
-                    } as React.CSSProperties
-                  }
-                >
-                  {word}
-                </span>
-              ))}
+              <span className="typing-text">{typedHeroTitle}</span>
+              <span className="typing-cursor" aria-hidden="true" />
             </h1>
             <p className="hero-intro fade-three">
               Discover top-rated stylists, find the look that feels like you,
@@ -637,7 +644,7 @@ function Home({
             <h2>Love creating beautiful looks?</h2>
           </div>
           <p>Showcase your craft. Grow your chair.</p>
-          <button className="pill primary" onClick={() => go("stylists")}>
+          <button className="pill primary" onClick={() => go("login")}>
             Become a TRESSA Artist <Icon name="arrow" size={17} />
           </button>
         </section>

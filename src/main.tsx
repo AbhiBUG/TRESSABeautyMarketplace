@@ -4,7 +4,7 @@ import App from "./App"
 
 const globalStyles = String.raw`@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap');
 
-:root{--ink:#440936;--plum:#71305f;--pink:#c77aa8;--blush:#f1dce9;--paper:#fcf8fb;--white:#fff;--line:#e8dce4}
+:root{--ink:#440936;--plum:#71305f;--pink:#c77aa8;--blush:#f1dce9;--paper:;--white:#fff;--line:#e8dce4}
 @layer base{
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -90,6 +90,42 @@ footer{background:#2e0626;color:white;padding:70px max(5vw,30px) 25px;display:gr
   transform: translateY(42px) rotate(2deg);
   animation: word-rise 0.85s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   animation-delay: var(--word-delay);
+}
+
+.app .typing-title .typing-text {
+  display: inline;
+  margin-right: 0;
+  opacity: 1;
+  filter: none;
+  transform: none;
+  animation: none;
+  color: transparent;
+  background: linear-gradient(110deg, #440936 0%, #71305f 38%, #c77aa8 58%, #71305f 78%, #440936 100%);
+  background-size: 220% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  text-shadow: 0 10px 24px rgba(199, 122, 168, 0.16);
+  animation: title-shimmer 7s ease-in-out infinite;
+}
+
+.app .typing-title .typing-cursor {
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  margin-left: 0.14em;
+  border-left: 2px solid var(--pink);
+  vertical-align: -0.12em;
+  animation: cursor-blink 0.85s step-end infinite;
+}
+
+@keyframes title-shimmer {
+  0%, 100% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+}
+
+@keyframes cursor-blink {
+  0%, 45% { opacity: 1; }
+  46%, 100% { opacity: 0; }
 }
 
 .app .hero-title span:nth-child(4),
@@ -354,6 +390,11 @@ footer{background:#2e0626;color:white;padding:70px max(5vw,30px) 25px;display:gr
     transform: none !important;
     transition: none !important;
     animation: none !important;
+  }
+
+  .typing-title .typing-text {
+    animation: none;
+    background-position: 50% center;
   }
 }
 
