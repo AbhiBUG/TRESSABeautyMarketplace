@@ -1226,6 +1226,10 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
   )
   const active = selected === null ? null : calls[selected]
   const applicationComplete = selected !== null && applied.includes(selected)
+  const collaborationBaseAmount = active?.price.includes(" → ")
+    ? Number(active.price.split(" → ")[1].replace(/[₹,]/g, ""))
+    : 0
+  const collaborationFee = collaborationBaseAmount * 0.05
   const apply = (index: number) => {
     setSelected(index)
     setSubmitted(false)
@@ -1282,6 +1286,10 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
         <div className="offer-grid">
           {filtered.map((c) => {
             const index = calls.indexOf(c)
+            const discountedPrice = c.offer === "Discounted" ? c.price.split(" → ") : null
+            const discountPercent = discountedPrice
+              ? Math.round((1 - Number(discountedPrice[1].replace(/[₹,]/g, "")) / Number(discountedPrice[0].replace(/[₹,]/g, ""))) * 100)
+              : 0
             return <article className="offer-card" key={c.title}>
               <div className="offer-image"><img src={c.image} alt={c.title} /><span>{c.offer}</span></div>
               <div className="offer-content">
@@ -1289,7 +1297,16 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
                 <h3>{c.title}</h3>
                 <p><Icon name="pin" size={14} /> {c.place} · {c.service}</p>
                 <small className="offer-detail">{c.deliverables}</small>
-                <div className="offer-meta"><strong>{c.price}</strong><span>Apply by {c.deadline}</span></div>
+                <div className="offer-meta">
+                  {discountedPrice ? (
+                    <div className="discounted-price">
+                      <del>{discountedPrice[0]}</del>
+                      <strong>{discountedPrice[1]}</strong>
+                      <b>{discountPercent}% off</b>
+                    </div>
+                  ) : <strong>{c.price}</strong>}
+                  <span>Apply by {c.deadline}</span>
+                </div>
                 <span className="availability">{c.availability}</span>
                 <div className="offer-actions"><button className="pill outline" onClick={() => setSelected(index)}>View details</button><button className="pill primary" onClick={() => apply(index)} disabled={applied.includes(index)}>{applied.includes(index) ? "Applied" : "Apply"} {!applied.includes(index) && <Icon name="arrow" size={15} />}</button></div>
               </div>
@@ -1337,14 +1354,42 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
           <div><p className="eyebrow">Your idea, your invitation</p><h2>Send a request to a business.</h2></div>
           <p>Have a look in mind? Tell a salon or stylist what you would love to create together.</p>
         </div>
-        <form className="request-form" onSubmit={(event) => { event.preventDefault(); setRequestSubmitted(true) }}>
-          <select required value={requestStudio} onChange={(event) => setRequestStudio(event.target.value)}>
-            <option value="">Choose a business</option>
-            {calls.map((call) => <option key={call.studio} value={call.studio}>{call.studio} · {call.place}</option>)}
-          </select>
-          <textarea required placeholder="Tell the business about the look or collaboration you have in mind." rows={3} />
-          <button className="pill primary" type="submit">{requestSubmitted ? "Request sent to business" : "Send request"} {!requestSubmitted && <Icon name="arrow" size={16} />}</button>
-        </form>
+        <div className="request-panel">
+          <div className="request-guide">
+            <span className="request-step">01</span>
+            <h3>Shape the invitation</h3>
+            <p>Choose who you want to work with and share the creative direction. The business can respond with availability and terms.</p>
+            <div className="request-points">
+              <span><Icon name="check" size={14} /> Business response</span>
+              <span><Icon name="check" size={14} /> Availability and terms</span>
+              <span><Icon name="check" size={14} /> No payment to send</span>
+            </div>
+          </div>
+          <form className="request-form" onSubmit={(event) => { event.preventDefault(); setRequestSubmitted(true) }}>
+            <div className="request-form-heading">
+              <div>
+                <span className="request-form-step">Step 1 of 1</span>
+                <h3>Tell them what you want to create.</h3>
+              </div>
+              <small>We’ll pass your request to the selected business.</small>
+            </div>
+            <label>
+              Business
+              <select required value={requestStudio} onChange={(event) => setRequestStudio(event.target.value)}>
+                <option value="">Choose a business</option>
+                {calls.map((call) => <option key={call.studio} value={call.studio}>{call.studio} · {call.place}</option>)}
+              </select>
+            </label>
+            <label>
+              Collaboration brief
+              <textarea required placeholder="Tell the business about the look or collaboration you have in mind." rows={4} />
+            </label>
+            <div className="request-form-footer">
+              <small>No payment is taken until the collaboration is agreed.</small>
+              <button className="pill primary" type="submit">{requestSubmitted ? "Request sent to business" : "Send request"} {!requestSubmitted && <Icon name="arrow" size={16} />}</button>
+            </div>
+          </form>
+        </div>
       </section>
       
       <section className="my-collabs page-main">
@@ -1358,21 +1403,21 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
         </article>
       </section>
 <section id="collab-payment" className="collab-payment page-main">
-  <div className="payment-section-copy">
-    <p className="eyebrow">Collaboration resources</p>
-    <h2>{applicationPendingPayment && !paymentComplete ? "Complete your resource fee to apply." : "Everything your next look needs."}</h2>
-    <p>
-      {applicationPendingPayment && !paymentComplete
-        ? "Your application is ready. Click the payment button to unlock the final submission."
-        : "Your completed collaboration is recorded here, with a clear resource fee settled after the experience."}
-    </p>
+  <div className="payment-section-heading">
+    <p className="eyebrow">Collaboration payment</p>
+    <h2>Settle your pay.</h2>
   </div>
   <div className="payment-card">
     <div className="payment-card-heading">
       <div><span className="completed-badge">{applicationPendingPayment && !paymentComplete ? "Application fee" : "Ready to pay"}</span><h3>{applicationPendingPayment && !paymentComplete && active ? active.title : "Texture in Motion"}</h3><small>{applicationPendingPayment && !paymentComplete && active ? `${active.studio} · Collaboration application` : "Keshya Studio · Completed collaboration"}</small></div>
       <strong>5%</strong>
     </div>
-    <div className="payment-summary-row"><span>Payment status</span><b>{paymentComplete ? "Complete" : "Due after completion"}</b></div>
+    <div className="payment-summary-row"><span>Payment status</span><b>{paymentComplete ? "Paid" : applicationPendingPayment ? "Action required" : "Remaining to pay"}</b></div>
+    <div className="payment-breakdown">
+      <div><span>Benefited amount</span><strong>{active?.price ?? "Complimentary"}</strong></div>
+      <div><span>5% TRESSA resource fee</span><strong>{paymentComplete ? "₹0" : `₹${collaborationFee.toLocaleString("en-IN")}`}</strong></div>
+    </div>
+    <div className="payment-due-row"><span>{paymentComplete ? "Resource fee paid" : "Remaining to pay"}</span><strong>{paymentComplete ? "₹0" : `₹${collaborationFee.toLocaleString("en-IN")}`}</strong></div>
     <button className="pill primary" onClick={() => {
       setPaymentComplete(true)
       setApplicationPendingPayment(false)
@@ -1381,7 +1426,7 @@ function Collaborations({ go }: { go: (p: Page) => void }) {
         setSubmitted(true)
       }
     }} disabled={paymentComplete}>
-      {paymentComplete ? "Payment complete" : applicationPendingPayment ? "Pay resource fee to apply" : "Pay TRESSA"} {!paymentComplete && <Icon name="arrow" size={15} />}
+      {paymentComplete ? "Payment complete" : applicationPendingPayment ? "Pay 5% to proceed" : "Pay 5% to proceed"} {!paymentComplete && <Icon name="arrow" size={15} />}
     </button>
     <small className="payment-note">{paymentComplete ? "Thank you for using TRESSA to bring your collaboration to life." : "The final resource fee is shown before payment confirmation."}</small>
   </div>
@@ -1763,24 +1808,25 @@ function BusinessDashboard({ go }: { go: (p: Page) => void }) {
         </div>
       </section>
       <section className="business-collaboration-payment section">
-        <div>
-          <p className="eyebrow">Collaboration resources</p>
-          <h2>Everything your next collaboration needs.</h2>
-          <p>
-            Track completed opportunities and settle the platform resource fee
-            after the agreed collaboration is complete.
-          </p>
+        <div className="payment-section-heading">
+          <p className="eyebrow">Collaboration payment</p>
+          <h2>Settle your pay.</h2>
         </div>
         <div className="business-payment-card">
           <div className="payment-card-heading">
             <div><span className="completed-badge">Ready to pay</span><h3>Texture in Motion</h3><small>Keshya Studio · Completed collaboration</small></div>
             <strong>5%</strong>
           </div>
-          <div className="payment-summary-row"><span>Payment status</span><b>{businessPaymentComplete ? "Complete" : "Due after completion"}</b></div>
+          <div className="payment-summary-row"><span>Payment status</span><b>{businessPaymentComplete ? "Paid" : "Remaining to pay"}</b></div>
+          <div className="payment-breakdown">
+            <div><span>Agreed collaboration value</span><strong>₹10,000</strong></div>
+            <div><span>5% TRESSA resource fee</span><strong>{businessPaymentComplete ? "₹0" : "₹500"}</strong></div>
+          </div>
+          <div className="payment-due-row"><span>{businessPaymentComplete ? "Resource fee paid" : "Remaining to pay"}</span><strong>{businessPaymentComplete ? "₹0" : "₹500"}</strong></div>
           <button className="pill primary" onClick={() => setBusinessPaymentComplete(true)} disabled={businessPaymentComplete}>
-            {businessPaymentComplete ? "Payment complete" : "Pay TRESSA"} {!businessPaymentComplete && <Icon name="arrow" size={15} />}
+            {businessPaymentComplete ? "Payment complete" : "Pay 5% to proceed"} {!businessPaymentComplete && <Icon name="arrow" size={15} />}
           </button>
-          <p className="payment-note">{businessPaymentComplete ? "Thank you for using TRESSA to make the collaboration happen." : "The final resource fee is shown before payment confirmation."}</p>
+          <p className="payment-note">{businessPaymentComplete ? "Thank you for using TRESSA to make the collaboration happen." : "The 5% resource fee is shown before payment confirmation."}</p>
         </div>
       </section>
       <section className="business-success-note section">
@@ -1811,7 +1857,7 @@ function BusinessDashboard({ go }: { go: (p: Page) => void }) {
             <button className="pill primary" disabled>
               Current plan · Free trial
             </button>
-            <button className="pill outline">Explore Business Plans <Icon name="arrow" size={16} /></button>
+            <button className="pill outline" onClick={() => document.getElementById("business-plans")?.scrollIntoView({ behavior: "smooth", block: "start" })}>Explore Business Plans <Icon name="arrow" size={16} /></button>
           </div>
         </div>
 
@@ -1937,7 +1983,7 @@ function BusinessDashboard({ go }: { go: (p: Page) => void }) {
 
       </section>
         
-      <section className="business-pricing section">
+      <section id="business-plans" className="business-pricing section">
         <div className="pricing-heading">
           <SectionTitle
             eyebrow="Business subscription plans"
