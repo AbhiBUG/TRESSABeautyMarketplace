@@ -465,6 +465,7 @@ function Home({
   const [hero, setHero] = useState(0)
   const heroTitle = "Your next look starts here"
   const [typedHeroTitle, setTypedHeroTitle] = useState("")
+  const [cursorVisible, setCursorVisible] = useState(true)
   const collabRef = useRef<HTMLDivElement>(null)
   const [revealed, setRevealed] = useState(false)
   useEffect(() => {
@@ -481,6 +482,11 @@ function Home({
       observer.disconnect()
     }
   }, [])
+  useEffect(() => {
+    if (typedHeroTitle !== heroTitle) return
+    const timer = window.setTimeout(() => setCursorVisible(false), 1000)
+    return () => window.clearTimeout(timer)
+  }, [typedHeroTitle, heroTitle])
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setTypedHeroTitle(heroTitle)
@@ -511,13 +517,18 @@ function Home({
               aria-label={heroTitle}
               aria-live="polite"
             >
-              <span className="typing-text">{typedHeroTitle}</span>
-              <span
-                className={`typing-cursor ${
-                  typedHeroTitle === heroTitle ? "is-complete" : ""
-                }`}
-                aria-hidden="true"
-              />
+              <span className="typing-placeholder" aria-hidden="true">
+                {heroTitle}
+              </span>
+              <span className="typing-line">
+                <span className="typing-text">{typedHeroTitle}</span>
+                <span
+                  className={`typing-cursor ${
+                    typedHeroTitle === heroTitle ? "is-complete" : ""
+                  } ${cursorVisible ? "" : "is-hidden"}`}
+                  aria-hidden="true"
+                />
+              </span>
             </h1>
             <p className="hero-intro fade-three">
               Discover top-rated stylists, find the look that feels like you,
