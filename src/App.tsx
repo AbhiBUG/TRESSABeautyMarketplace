@@ -252,7 +252,17 @@ const Icon = ({ name, size = 20 }: { name: string; size?: number }) => {
   )
 }
 
-function Header({ page, go }: { page: Page; go: (p: Page) => void }) {
+type LoginMode = "user" | "business"
+
+function Header({
+  page,
+  go,
+  openLogin,
+}: {
+  page: Page
+  go: (p: Page) => void
+  openLogin: (mode?: LoginMode, redirect?: Page) => void
+}) {
   const [open, setOpen] = useState(false)
   const links: [string, Page, string?][] = [
     ["Explore", "explore"],
@@ -292,19 +302,23 @@ function Header({ page, go }: { page: Page; go: (p: Page) => void }) {
           <button
             className={page === target ? "active" : ""}
             key={label}
-            onClick={() => navigate(target, anchor)}
+            onClick={() =>
+              target === "collaborations"
+                ? openLogin("user", "collaborations")
+                : navigate(target, anchor)
+            }
           >
             {label}
           </button>
         ))}
-        <button className="mobile-sign" onClick={() => navigate("login")}>
+        <button className="mobile-sign" onClick={() => openLogin("user", "collaborations")}>
           Sign in
         </button>
       </nav>
       <div className="header-actions">
         <button
           className="sign-in"
-          onClick={() => navigate("login")}
+          onClick={() => openLogin("user", "collaborations")}
         >
           Sign In
         </button>
@@ -313,7 +327,7 @@ function Header({ page, go }: { page: Page; go: (p: Page) => void }) {
         </button>
         <button
           className="profile-button"
-          onClick={() => navigate("login")}
+          onClick={() => openLogin("user", "collaborations")}
           aria-label="Open profile"
         >
           <Icon name="user" size={18} />
@@ -437,11 +451,13 @@ function StylistCard({
 
 function Home({
   go,
+  openLogin,
   chooseTrend,
   setSearch,
   selectStylist,
 }: {
   go: (p: Page) => void
+  openLogin: (mode?: LoginMode, redirect?: Page) => void
   chooseTrend: (t: string) => void
   setSearch: (v: { service: string; location: string }) => void
   selectStylist: (id: number) => void
@@ -496,7 +512,12 @@ function Home({
               aria-live="polite"
             >
               <span className="typing-text">{typedHeroTitle}</span>
-              <span className="typing-cursor" aria-hidden="true" />
+              <span
+                className={`typing-cursor ${
+                  typedHeroTitle === heroTitle ? "is-complete" : ""
+                }`}
+                aria-hidden="true"
+              />
             </h1>
             <p className="hero-intro fade-three">
               Discover top-rated stylists, find the look that feels like you,
@@ -664,7 +685,7 @@ function Home({
               <span>Collaborations · Referrals · Analytics</span>
             </article>
           </div>
-          <button className="pill primary" onClick={() => go("login")}>
+          <button className="pill primary" onClick={() => openLogin("business", "business")}>
             Get started <Icon name="arrow" size={17} />
           </button>
         </section>
@@ -704,7 +725,7 @@ function Home({
             <div>
               <button
                 className="pill light"
-                onClick={() => go("collaborations")}
+                onClick={() => openLogin("user", "collaborations")}
               >
                 Collaborate <Icon name="arrow" size={17} />
               </button>
@@ -1635,8 +1656,16 @@ function ForStylists({ go }: { go: (p: Page) => void }) {
   )
 }
 
-function Login({ go }: { go: (p: Page) => void }) {
-  const [mode, setMode] = useState<"user" | "business">("user")
+function Login({
+  go,
+  initialMode,
+  redirect,
+}: {
+  go: (p: Page) => void
+  initialMode: LoginMode
+  redirect: Page
+}) {
+  const [mode, setMode] = useState<LoginMode>(initialMode)
   const [submitted, setSubmitted] = useState(false)
 
   return (
@@ -1660,7 +1689,7 @@ function Login({ go }: { go: (p: Page) => void }) {
             event.preventDefault()
             setSubmitted(true)
             window.setTimeout(
-              () => go(mode === "business" ? "business" : "home"),
+              () => go(redirect),
               500,
             )
           }}
@@ -1683,7 +1712,12 @@ function Login({ go }: { go: (p: Page) => void }) {
           </div>
           <label>
             Username
-            <input name="username" type="text" autoComplete="username" />
+            <input
+              name="username"
+              type="text"
+              autoComplete="username"
+              defaultValue={mode === "business" ? "studio.admin" : "tressa.user"}
+            />
           </label>
           <label>
             Password
@@ -1691,6 +1725,7 @@ function Login({ go }: { go: (p: Page) => void }) {
               name="password"
               type="password"
               autoComplete="current-password"
+              defaultValue="tressa123"
             />
           </label>
           <button className="pill primary login-submit" type="submit">
@@ -2210,6 +2245,8 @@ export default function App() {
     routeForPath(window.location.pathname),
   )
   const [transitioning, setTransitioning] = useState(false)
+  const [loginMode, setLoginMode] = useState<LoginMode>("user")
+  const [loginRedirect, setLoginRedirect] = useState<Page>("collaborations")
   const [trend, setTrend] = useState("")
   const [search, setSearch] = useState({ service: "", location: "" })
   const [selectedStylistId, setSelectedStylistId] = useState(1)
@@ -2236,14 +2273,22 @@ export default function App() {
       window.setTimeout(() => setTransitioning(false), 80)
     }, transitionDelay)
   }
+  const openLogin = (
+    mode: LoginMode = "user",
+    redirect: Page = "collaborations",
+  ) => {
+    setLoginMode(mode)
+    setLoginRedirect(redirect)
+    go("login")
+  }
   return (
     <div className="app">
-      <Header page={page} go={go} />
+      <Header page={page} go={go} openLogin={openLogin} />
       <div
         className={`page-stage ${transitioning ? "is-leaving" : "is-entering"}`}
       >
         {page === "home" && (
-          <Home go={go} chooseTrend={setTrend} setSearch={setSearch} selectStylist={setSelectedStylistId} />
+          <Home go={go} openLogin={openLogin} chooseTrend={setTrend} setSearch={setSearch} selectStylist={setSelectedStylistId} />
         )}
         {page === "explore" && <Explore go={go} initial={search} selectStylist={setSelectedStylistId} />}
         {page === "consultation" && <Consultation go={go} trend={trend} />}
@@ -2251,7 +2296,7 @@ export default function App() {
         {page === "booking" && <Booking go={go} stylistId={selectedStylistId} />}
         {page === "collaborations" && <Collaborations go={go} />}
         {page === "stylists" && <ForStylists go={go} />}
-        {page === "login" && <Login go={go} />}
+        {page === "login" && <Login go={go} initialMode={loginMode} redirect={loginRedirect} />}
         {page === "business" && <BusinessDashboard go={go} />}
         {page !== "consultation" &&
           page !== "booking" &&

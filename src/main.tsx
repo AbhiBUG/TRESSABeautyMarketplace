@@ -113,9 +113,28 @@ footer{background:#2e0626;color:white;padding:70px max(5vw,30px) 25px;display:gr
   width: 0;
   height: 1em;
   margin-left: 0.14em;
-  border-left: 2px solid var(--pink);
+  border-left: 2px solid #000;
   vertical-align: -0.12em;
-  animation: cursor-blink 0.85s step-end infinite;
+  opacity: 1;
+}
+
+.app .typing-title .typing-cursor.is-complete {
+  animation: cursor-slide-fade 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes cursor-slide-fade {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  55% {
+    opacity: 0.55;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
 }
 
 @keyframes title-shimmer {
